@@ -12,4 +12,6 @@ __pycache__/
 .test-runtime/
 .samples-runtime/
 
+configuration/*.properties
+
 tmp/pdfs/

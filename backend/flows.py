@@ -67,8 +67,9 @@ def list_flows():
 
 def validate_flow(flow):
     from .main import get_connection
-    source = get_connection(flow.source_id)
-    destination=get_connection(flow.destination_id)
+    from .connection_properties import resolve_connection
+    source = resolve_connection(get_connection(flow.source_id))
+    destination=resolve_connection(get_connection(flow.destination_id))
     if "LDAP" in (source["protocol"],destination["protocol"]):
         raise ConnectorError("LDAP authenticates users; it cannot be a file-flow endpoint")
     if source["protocol"]=="KAFKA" and not source["config"].get("enable_receiver"):
@@ -137,7 +138,8 @@ def poll_flow(flow_id, force=False):
             raise ConnectorError("Data flow not found")
         if not flow["enabled"]:
             raise ConnectorError("Enable the data flow before running it")
-        source = get_connection(flow["source_id"])
+        from .connection_properties import resolve_connection
+        source = resolve_connection(get_connection(flow["source_id"]))
         if source["protocol"] == "KAFKA":
             from .kafka import poll_receiver
             return {"queued":poll_receiver(source),"detail":"Kafka messages are durably received once and routed to every matching flow"}
@@ -273,7 +275,20 @@ def stop_worker():
 def poll_connectors():
     from .main import connections,database
     from .kafka import poll_receiver,close_receivers
-    active=[connection for connection in connections() if connection["protocol"]=="KAFKA" and connection["config"].get("enable_receiver")]
+    from .connection_properties import resolve_connection
+    active=[]
+    for connection in connections():
+        if connection["protocol"] != "KAFKA":
+            continue
+        try:
+            effective=resolve_connection(connection)
+        except ConnectorError as exc:
+            with database() as db:
+                db.execute("INSERT INTO receivers VALUES (?,?,?,?) ON CONFLICT(connection_id) DO UPDATE SET last_poll=excluded.last_poll,error=excluded.error",
+                    (connection["id"],time.time(),0,safe_error(exc)))
+            continue
+        if effective["config"].get("enable_receiver"):
+            active.append(effective)
     close_receivers({connection["id"] for connection in active})
     for connection in active:
         with database() as db:

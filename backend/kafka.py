@@ -1,15 +1,19 @@
 """Event stream file publishing and durable consumption with explicit offset commits."""
 import logging
+import hashlib
+import json
 import threading
 from urllib.parse import urlsplit
 
 from .protocols import ConnectorError, secret
+from .kafka_properties import load_settings
 
 LOCK=threading.Lock()
 CONSUMERS={}
 
 
-def configuration(connection,options):
+def configuration(connection,options,native=None):
+    native = native or {}
     parsed=urlsplit(connection["endpoint"])
     servers=options.bootstrap_servers or parsed.netloc
     config={"bootstrap.servers":servers,"client.id":options.client_id,
@@ -20,36 +24,46 @@ def configuration(connection,options):
         if not options.username:
             raise ConnectorError("Event stream SASL requires a username")
         config.update({"sasl.mechanism":options.sasl_mechanism,"sasl.username":options.username,
-                       "sasl.password":secret(options.password_env,True)})
+                       "sasl.password":native["sasl.password"] if "sasl.password" in native else secret(options.password_env,True)})
     if "SSL" in options.security_protocol:
         config["ssl.endpoint.identification.algorithm"]="https"
-        if options.ca_certificate_env:
+        if options.ca_certificate_env and "ssl.ca.location" not in native:
             config["ssl.ca.pem"]=secret(options.ca_certificate_env,True)
-        if options.client_certificate_env:
+        if options.client_certificate_env and "ssl.certificate.location" not in native:
             config["ssl.certificate.pem"]=secret(options.client_certificate_env,True)
             config["ssl.key.pem"]=secret(options.client_key_env,True)
             if options.client_key_password_env:
                 config["ssl.key.password"]=secret(options.client_key_password_env,True)
+    config.update(native)
     return config
 
 
 def operate_kafka(connection,options,operation,path,data,content_type):
-    from confluent_kafka import Producer
+    try:
+        from confluent_kafka import Producer, KafkaException
+    except ImportError as exc:
+        raise ConnectorError("Kafka client is not installed. Install backend/requirements.txt using the Python environment running the API") from exc
     if operation not in ("test","send"):
         raise ConnectorError("Event stream inbound uses Enable receiver and the durable inbox; it has no file directory")
+    options,native=load_settings(options)
     if not options.topic:
         raise ConnectorError("Event stream topic must be configured")
-    config=configuration(connection,options)
+    config=configuration(connection,options,native)
     config.update({"enable.idempotence":True,"acks":"all","message.max.bytes":options.message_max_bytes+4096,
                    "delivery.timeout.ms":options.timeout*1000,"request.timeout.ms":min(options.timeout*1000,10000),
                    "compression.type":options.compression_type})
-    producer=Producer(config,logger=logging.getLogger("relay.kafka"))
     if operation=="test":
-        metadata=producer.list_topics(timeout=options.timeout)
+        try:
+            producer=Producer(config,logger=logging.getLogger("relay.kafka"))
+            metadata=producer.list_topics(timeout=options.timeout)
+        except KafkaException as exc:
+            # Broker exception text may contain credentials; report safe guidance.
+            raise ConnectorError("Event stream broker metadata request failed. Verify the bootstrap servers, broker availability, advertised listeners, security protocol, TLS certificates and SASL credentials") from exc
         topic=metadata.topics.get(options.topic)
         if not topic or topic.error:
             raise ConnectorError("Event stream topic is unavailable or access was denied")
         return {"reachable":True,"topic":options.topic,"partitions":len(topic.partitions)}
+    producer=Producer(config,logger=logging.getLogger("relay.kafka"))
     if len(data)>options.message_max_bytes:
         raise ConnectorError("Document exceeds configured Kafka Message Max Size Bytes")
     outcome=[]
@@ -71,18 +85,20 @@ def poll_receiver(connection):
     from .inbox import accept
     from .flows import filename_only
     options=KafkaOptions.model_validate(connection["config"])
+    options,native=load_settings(options)
     if not options.enable_receiver:
         return 0
     if not options.topic or not options.consumer_group_id:
         raise ConnectorError("Event stream receiver requires a topic and Consumer Group Id")
+    config=configuration(connection,options,native)
     with LOCK:
         key=connection["id"]
-        signature=(connection["endpoint"],options.model_dump_json())
+        fingerprint=hashlib.sha256(json.dumps(config,sort_keys=True).encode()).hexdigest()
+        signature=(connection["endpoint"],options.model_dump_json(),fingerprint)
         current=CONSUMERS.get(key)
         if current and current[0]!=signature:
             current[1].close();CONSUMERS.pop(key);current=None
         if not current:
-            config=configuration(connection,options)
             config.update({"group.id":options.consumer_group_id,"enable.auto.commit":False,
                 "enable.auto.offset.store":False,"auto.offset.reset":options.auto_offset_reset,
                 "isolation.level":options.isolation_level,"fetch.message.max.bytes":options.message_max_bytes+4096})

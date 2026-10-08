@@ -1,0 +1,13 @@
+# Copy to AS2.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=https://as2.partner.example/as2
+local_as2_id=MY-COMPANY
+partner_as2_id=ACME-AS2
+sign=true
+encrypt=true
+compress=true
+signing_key_file=REPLACE_WITH_CREDENTIAL_FILE_PATH
+decryption_key_file=REPLACE_WITH_CREDENTIAL_FILE_PATH
+partner_certificate_file=REPLACE_WITH_CREDENTIAL_FILE_PATH
+mdn_mode=SYNC
+require_signed_mdn=true

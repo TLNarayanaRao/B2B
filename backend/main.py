@@ -14,6 +14,8 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field, SecretStr, model_validator
 from .protocols import OPTION_TYPES, MAX_BYTES, ConnectorError, operate, validate_endpoint
@@ -27,6 +29,17 @@ async def lifespan(app):
 
 
 app = FastAPI(title="Relay B2B API", lifespan=lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    # Pydantic includes the rejected input, which can contain pasted credentials.
+    return JSONResponse(status_code=422, content={"detail": [
+        {key: error[key] for key in ("type", "loc", "msg") if key in error}
+        for error in exc.errors()
+    ]})
+
+
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], allow_methods=["*"], allow_headers=["*"])
 DB = Path(os.environ.get("RELAY_DB_PATH", Path(__file__).with_name("relay.db")))
 SCHEMA_LOCK = threading.Lock()
@@ -59,13 +72,14 @@ def database():
 class Connection(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     protocol: Literal["AS2", "SFTP", "SMB", "GCS", "FILE", "EMS", "FTP", "FTPS", "HTTP", "HTTPS", "KAFKA", "LDAP", "SHAREPOINT"]
-    endpoint: str = Field(min_length=1, max_length=500)
+    endpoint: str = Field(default="", max_length=500)
     config: dict = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_protocol(self):
-        validate_endpoint(self.protocol, self.endpoint)
         self.config = OPTION_TYPES[self.protocol].model_validate(self.config).model_dump()
+        if not (self.config.get("config_key") and not self.endpoint):
+            validate_endpoint(self.protocol, self.endpoint)
         return self
 
 
@@ -127,6 +141,14 @@ def get_connection(connection_id):
     if not record:
         raise HTTPException(404, "Connection not found")
     return record
+
+
+def get_runtime_connection(connection_id):
+    from .connection_properties import resolve_connection
+    try:
+        return resolve_connection(get_connection(connection_id))
+    except ConnectorError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @app.put("/api/connections/{connection_id}")
@@ -216,7 +238,7 @@ async def limited_body(request):
 
 @app.head("/as2/{connection_id}")
 def as2_reachable(connection_id: str, request: Request):
-    connection=get_connection(connection_id)
+    connection=get_runtime_connection(connection_id)
     if connection["protocol"]!="AS2":
         raise HTTPException(400,"This endpoint is not AS2")
     inbound_transport(request,OPTION_TYPES["AS2"].model_validate(connection["config"]))
@@ -225,7 +247,7 @@ def as2_reachable(connection_id: str, request: Request):
 
 @app.post("/as2/{connection_id}")
 async def receive_as2(connection_id: str, request: Request):
-    connection=get_connection(connection_id)
+    connection=get_runtime_connection(connection_id)
     if connection["protocol"]!="AS2":
         raise HTTPException(400,"This endpoint is not AS2")
     options=OPTION_TYPES["AS2"].model_validate(connection["config"])
@@ -271,7 +293,7 @@ async def receive_as2(connection_id: str, request: Request):
 
 @app.post("/as2/{connection_id}/mdn")
 async def receive_async_mdn(connection_id: str, request: Request):
-    connection=get_connection(connection_id)
+    connection=get_runtime_connection(connection_id)
     if connection["protocol"]!="AS2":
         raise HTTPException(400,"This endpoint is not AS2")
     inbound_transport(request,OPTION_TYPES["AS2"].model_validate(connection["config"]))
@@ -301,7 +323,7 @@ def download_receipt(message_id: str):
 
 @app.get("/api/connections/{connection_id}/as2-info")
 def as2_connection_info(connection_id: str, request: Request):
-    connection=get_connection(connection_id)
+    connection=get_runtime_connection(connection_id)
     if connection["protocol"]!="AS2":
         raise HTTPException(400,"This endpoint is not AS2")
     try:
@@ -397,7 +419,7 @@ def runs():
 
 
 def connector_protocol(connection_id, protocol):
-    connection=get_connection(connection_id)
+    connection=get_runtime_connection(connection_id)
     if connection["protocol"] not in protocol:
         raise HTTPException(400,"This connection does not support the requested action")
     return connection

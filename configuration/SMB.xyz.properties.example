@@ -1,0 +1,6 @@
+# Copy to SMB.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=\\nas-server\b2b
+username=DOMAIN\relay
+password=REPLACE_WITH_PASSWORD
+encrypt=true

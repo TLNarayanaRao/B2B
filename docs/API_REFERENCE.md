@@ -13,6 +13,8 @@ The development API is local. Start it on the configured port and open /docs for
 
 A candidate profile has name, protocol, endpoint, and config. Protocol identifiers are AS2, HTTP, HTTPS, FTP, FTPS, FILE, SFTP, SMB, GCS, KAFKA, LDAP, SHAREPOINT, and EMS. Interface labels describe their roles.
 
+All types accept `config.config_key`. For example `{"name":"Partner","protocol":"SFTP","config":{"config_key":"xyz"}}` loads `configuration/SFTP.xyz.properties` on the API server; `endpoint` may be omitted when supplied in the file. Profile responses retain the key and original fields, never resolved credentials or file contents. File properties use the API configuration field names, with optional literal credentials (`password`) or credential file references (`private_key_file`) in place of `_env` references. See Protocol setup for the full format.
+
 Validation and failed save tests return 422. An unknown profile returns 404. A failed check writes nothing. Operation requests include operation, relative path, and content_base64 for sends, plus content_type. File size is limited to 10 MiB.
 
 ## AS2 endpoints

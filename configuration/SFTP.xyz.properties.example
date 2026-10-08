@@ -1,0 +1,6 @@
+# Copy to SFTP.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=sftp://sftp.partner.example:22/orders
+username=relay
+password=REPLACE_WITH_PASSWORD
+host_key_sha256=SHA256:REPLACE_WITH_TRUSTED_PARTNER_FINGERPRINT

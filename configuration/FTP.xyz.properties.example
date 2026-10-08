@@ -1,0 +1,6 @@
+# Copy to FTP.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=ftp://127.0.0.1:2121
+username=relay
+password=REPLACE_WITH_PASSWORD
+passive=true

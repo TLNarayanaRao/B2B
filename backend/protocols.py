@@ -30,7 +30,10 @@ def secret(reference, required=False):
         if required:
             raise ConnectorError("A credential environment variable reference is required")
         return None
-    value = os.environ.get(reference)
+    from .connection_properties import property_secret
+    value = property_secret(reference)
+    if value is None:
+        value = os.environ.get(reference)
     if not value:
         raise ConnectorError(f"Credential environment variable {reference} is not configured")
     return value
@@ -38,6 +41,7 @@ def secret(reference, required=False):
 
 class Options(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    config_key: str = Field(default="", max_length=100, pattern=r"^(?:[A-Za-z0-9][A-Za-z0-9_-]*)?$")
     timeout: int = Field(default=30, ge=1, le=120)
     max_entries: int = Field(default=500, ge=1, le=1500)
 
@@ -162,6 +166,8 @@ class HTTPOptions(Options):
 
     @model_validator(mode="after")
     def inbound_auth(self):
+        if self.config_key:
+            return self
         if self.enable_inbound and not self.inbound_token_env:
             raise ConnectorError("HTTP inbound requires a bearer token environment reference")
         if self.inbound_only and not self.enable_inbound:
@@ -198,7 +204,7 @@ class KafkaOptions(Options):
         import re
         if self.topic and not re.fullmatch(r"[A-Za-z0-9._-]{1,249}",self.topic):
             raise ConnectorError("Event stream topic contains invalid characters")
-        if self.enable_receiver and not self.consumer_group_id:
+        if self.enable_receiver and not self.consumer_group_id and not self.config_key:
             raise ConnectorError("Event stream receiver requires Consumer Group Id")
         if bool(self.client_certificate_env)!=bool(self.client_key_env):
             raise ConnectorError("Event stream client certificate and key must be provided together")
@@ -382,6 +388,9 @@ def object_name(prefix, path):
 
 
 def operate(connection, operation, path="", data=None, content_type="application/octet-stream"):
+    if connection["protocol"] != "KAFKA":
+        from .connection_properties import resolve_connection
+        connection = resolve_connection(connection)
     protocol, endpoint = connection["protocol"], connection["endpoint"]
     options = OPTION_TYPES[protocol].model_validate(connection.get("config", {}))
     path = relative_path(path, allow_empty=operation in ("list", "test") or protocol=="KAFKA")

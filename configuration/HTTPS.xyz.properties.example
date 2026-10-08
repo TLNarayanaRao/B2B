@@ -1,0 +1,8 @@
+# Copy to HTTPS.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=https://files.partner.example/inbox
+token=REPLACE_WITH_TOKEN
+send_method=PUT
+enable_inbound=true
+inbound_token=REPLACE_WITH_INBOUND_TOKEN
+require_https=true

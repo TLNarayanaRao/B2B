@@ -1,0 +1,10 @@
+# Copy to Kafka.xyz.properties and replace the placeholders on the API server.
+# UTF-8 key=value format. Values are literal; do not add quotes.
+bootstrap.servers=YOUR_CONFLUENT_BOOTSTRAP_HOST:9092
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+sasl.username=YOUR_KAFKA_API_KEY
+sasl.password=YOUR_NEW_KAFKA_API_SECRET
+topic=sap.qa2.item.domain.events.v1
+# Required only when Enable receiver is selected in the connection:
+group.id=relay-xyz

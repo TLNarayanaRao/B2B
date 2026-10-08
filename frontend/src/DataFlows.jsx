@@ -1,11 +1,8 @@
 import {connectorLabel} from './connectorLabels';
 import React, { useEffect, useState } from 'react';
 import { Plus, ArrowRight, Play, X, RefreshCw, Pause, Workflow } from 'lucide-react';
+import {api} from './api';
 
-async function api(path,body,method='POST'){
- const response=await fetch('/api/'+path,body?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined);
- const result=await response.json();if(!response.ok)throw new Error(typeof result.detail==='string'?result.detail:JSON.stringify(result.detail));return result;
-}
 const initial={name:'',source_id:'',destination_id:'',source_path:'',file_pattern:'*',destination_pattern:'{filename}',interval_seconds:30,max_files:20,min_age_seconds:5,enabled:true};
 export default function DataFlows({connections}){
  const [flows,setFlows]=useState([]),[jobs,setJobs]=useState([]),[modal,setModal]=useState(false),[form,setForm]=useState(initial),[error,setError]=useState(''),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');

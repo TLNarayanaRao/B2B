@@ -1,0 +1,10 @@
+# Copy to EMS.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=tcp://ems.partner.example:7222
+username=relay
+password=REPLACE_WITH_PASSWORD
+classpath=REPLACE_WITH_CLASSPATH
+destination=B2B.ORDERS
+destination_type=queue
+message_type=bytes
+jms_namespace=javax.jms

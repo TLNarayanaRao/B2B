@@ -1,0 +1,5 @@
+# Copy to GCS.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=gs://your-bucket/b2b
+project_id=your-project
+service_account_file=REPLACE_WITH_CREDENTIAL_FILE_PATH

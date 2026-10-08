@@ -265,7 +265,8 @@ def process_next_receipt():
             return False
         db.execute("UPDATE as2_receipts SET status='sending',attempts=attempts+1 WHERE id=?", (row[0],))
     try:
-        options = get_connection(row[1])["config"]
+        from .connection_properties import resolve_connection
+        options = resolve_connection(get_connection(row[1]))["config"]
         from .protocols import AS2Options
         with http_client(AS2Options.model_validate(options)) as client:
             response = client.post(row[4], headers=json.loads(row[2]), content=row[3])
@@ -283,6 +284,8 @@ def public_info(connection, base_url):
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes, serialization
     from .protocols import AS2Options
+    from .connection_properties import resolve_connection
+    connection = resolve_connection(connection)
     org, _ = identities(AS2Options.model_validate(connection["config"]))
     cert = x509.load_der_x509_certificate(org.sign_key[1].asn1.dump()) if org.sign_key else None
     return {"local_as2_id":org.as2_name, "partner_as2_id":connection["config"].get("partner_as2_id"),

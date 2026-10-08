@@ -19,6 +19,59 @@ def candidate(root):
     return {"name": "NAS", "protocol": "FILE", "endpoint": str(root), "config": {}}
 
 
+def test_validation_never_echoes_pasted_credentials(client):
+    response = client.post("/api/connections", json={
+        "name": "Orders", "protocol": "KAFKA", "endpoint": "kafka://localhost:9092",
+        "config": {"topic": "orders", "password_env": "private/secret+value"}})
+    assert response.status_code == 422
+    assert "password_env must be an environment variable name" in response.text
+    assert "private/secret+value" not in response.text
+    assert "input" not in response.json()["detail"][0]
+    assert "ctx" not in response.json()["detail"][0]
+    assert client.get("/api/connections").json() == []
+
+
+def test_kafka_broker_failure_is_actionable_and_does_not_save(client, monkeypatch):
+    import confluent_kafka
+    from unittest.mock import MagicMock
+    producer = MagicMock()
+    producer.list_topics.side_effect = confluent_kafka.KafkaException(
+        confluent_kafka.KafkaError(confluent_kafka.KafkaError._TRANSPORT, "private-broker-token"))
+    monkeypatch.setattr(confluent_kafka, "Producer", lambda *args, **kwargs: producer)
+    response = client.post("/api/connections", json={
+        "name": "Orders", "protocol": "KAFKA", "endpoint": "kafka://localhost:9092",
+        "config": {"topic": "orders", "security_protocol": "PLAINTEXT"}})
+    assert response.status_code == 422
+    assert "broker metadata request failed" in response.json()["detail"]
+    assert "bootstrap servers" in response.json()["detail"]
+    assert "private-broker-token" not in response.text
+    assert client.get("/api/connections").json() == []
+
+
+def test_kafka_test_checks_existing_topic_without_publishing_or_consuming(client, monkeypatch):
+    import confluent_kafka
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    producer = MagicMock()
+    producer.list_topics.return_value = SimpleNamespace(topics={
+        "orders": SimpleNamespace(error=None, partitions={0: object(), 1: object()})})
+    monkeypatch.setattr(confluent_kafka, "Producer", lambda *args, **kwargs: producer)
+    consumer = MagicMock()
+    monkeypatch.setattr(confluent_kafka, "Consumer", consumer)
+    candidate = {"name": "Orders", "protocol": "KAFKA", "endpoint": "kafka://localhost:9092",
+                 "config": {"topic": "orders", "security_protocol": "PLAINTEXT"}}
+    response = client.post("/api/connections", json=candidate)
+    assert response.status_code == 201, response.text
+    assert response.json()["connection_test"]["detail"] == {"topic": "orders", "partitions": 2}
+    producer.produce.assert_not_called()
+    consumer.assert_not_called()
+    producer.list_topics.return_value.topics = {}
+    response = client.post("/api/connections/test", json=candidate)
+    assert response.status_code == 422
+    assert "topic is unavailable" in response.json()["detail"]
+    assert len(client.get("/api/connections").json()) == 1
+
+
 @pytest.mark.parametrize("protocol", list(main.OPTION_TYPES))
 def test_every_protocol_tests_exact_settings_before_create_and_update(client, tmp_path, monkeypatch, protocol):
     data = json.loads((Path("samples") / protocol.lower() / "connection.json").read_text())

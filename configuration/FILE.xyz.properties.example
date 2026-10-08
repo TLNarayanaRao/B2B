@@ -1,0 +1,3 @@
+# Copy to FILE.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=<EXISTING_ABSOLUTE_NAS_FOLDER>

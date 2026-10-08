@@ -1,0 +1,8 @@
+# Copy to FTPS.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=ftps://ftp.partner.example:21/orders
+username=relay
+password=REPLACE_WITH_PASSWORD
+passive=true
+tls_mode=explicit
+ca_certificate_file=REPLACE_WITH_CREDENTIAL_FILE_PATH

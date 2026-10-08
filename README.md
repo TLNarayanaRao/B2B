@@ -26,6 +26,8 @@ Open http://127.0.0.1:5174. API reference: http://127.0.0.1:8010/docs.
 To restart, press Ctrl+C in each server terminal and rerun its start command.
 Use npm.cmd in PowerShell if execution policy blocks npm.ps1. Run frontend commands inside frontend, where package.json lives. If a port is unavailable, choose another unused port and update RELAY_API_URL accordingly.
 
+The frontend proxy defaults to the Python API at `http://127.0.0.1:8010`. Restart the frontend after changing `RELAY_API_URL`. If a connection test reports an HTTP 500/502 API error, first check that `http://127.0.0.1:8010/api/health` responds and that the frontend targets the same API port. A Kafka broker is a separate service: the sample requires a running broker at `127.0.0.1:9092`, an existing `b2b-orders` topic, and `PLAINTEXT` security; secured brokers require matching TLS/SASL settings.
+
 ## Using the workspace
 
 - Connections: create and test endpoint profiles; browse, send, receive, or perform directory actions.
@@ -46,5 +48,9 @@ Use npm.cmd in PowerShell if execution policy blocks npm.ps1. Run frontend comma
 - [Runnable samples](samples/README.md)
 
 New connections and configuration updates are tested before saving. Failed tests leave existing settings unchanged. Credentials resolve from server environment variables; profiles store variable names.
+
+Kafka also supports named server properties files: copy `configuration/Kafka.xyz.properties.example` to `configuration/Kafka.xyz.properties`, fill in the broker and credentials, then enter `xyz` in the connection's **Configuration key** field. The endpoint may be blank. See [named Kafka properties files](PROTOCOLS.md#named-kafka-properties-files) for supported settings and reload behavior.
+
+The same approach works for **all connection types**: `<CONNECTION_TYPE>.<PARTNER_KEY>.properties` in the server configuration folder. Examples for every type are included under `configuration`. Enter the partner key in **Configuration key / partner**; the file can supply the endpoint, connector settings, and credentials. See [shared properties format](PROTOCOLS.md#connectiontypepartnertype-properties-files).
 
 The current workspace runs locally. File operations are limited to 10 MiB. Directory connections provide lookup and authentication rather than file transport. JMS messaging is outbound only. Transformation steps inside Data Flows are not yet implemented.

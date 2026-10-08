@@ -1,0 +1,12 @@
+# Copy to LDAP.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=ldaps://directory.example:636
+directory_type=LDAP directory
+bind_dn=CN=relay-sync,OU=Services,DC=example,DC=com
+password=REPLACE_WITH_PASSWORD
+base_dn=OU=People,DC=example,DC=com
+search_filter=(objectClass=person)
+username_attribute=sAMAccountName
+email_attribute=mail
+uid_attribute=objectGUID
+start_tls=true

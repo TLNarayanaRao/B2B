@@ -1,0 +1,8 @@
+# Copy to SHAREPOINT.xyz.properties and replace the placeholders.
+# UTF-8 key=value; values are literal, without quotes.
+endpoint=https://tenant.sharepoint.com/sites/B2B
+tenant_id=REPLACE-TENANT-ID
+application_id=REPLACE-APPLICATION-ID
+application_secret=REPLACE_WITH_APPLICATION_SECRET
+drive_name=Documents
+root_path=orders
