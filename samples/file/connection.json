@@ -1,0 +1,6 @@
+{
+  "name": "Sample mounted NAS",
+  "protocol": "FILE",
+  "endpoint": "<EXISTING_ABSOLUTE_NAS_FOLDER>",
+  "config": {}
+}

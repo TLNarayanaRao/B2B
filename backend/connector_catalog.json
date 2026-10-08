@@ -1,0 +1,106 @@
+{
+  "title": "Relay connector reference",
+  "version": "Relay documentation 1.0",
+  "scope": "Connector capabilities, verification and current limitations.",
+  "connectors": [
+    {
+      "id": "HTTP",
+      "name": "HTTP / HTTPS",
+      "role": "File transfer",
+      "implemented": "Partner PUT/POST/GET, JSON directory listings, Basic/Bearer auth, verified TLS, authenticated durable inbox and NAS routing.",
+      "verification": "Local HTTP roundtrip and NAS-routing tests",
+      "gaps": "Server-specific CONNECT/CONFIRM choreography, multipart forms, automatic retries and full action language.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "FTP",
+      "name": "FTP / FTPS",
+      "role": "File transfer",
+      "implemented": "Binary STOR/RETR, MLSD listing, passive/active mode, verified explicit/implicit TLS client and explicit TLS NAS listener.",
+      "verification": "Real FTP and explicit FTPS socket roundtrips",
+      "gaps": "ASCII translation, LIST fallback, resume, proxy/dial-up, raw QUOTE/SITE commands. Remote FTP overwrite protection is preflight only.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "FILE",
+      "name": "File",
+      "role": "File transfer",
+      "implemented": "Rooted native/NAS reads and writes, browse, exclusive file creation, optional parent directories and token-based post-processing.",
+      "verification": "Actual local NAS files and post-processing tests",
+      "gaps": "Unrestricted absolute paths, arbitrary JavaScript/date expressions, custom macro expansion and command-output log capture.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "KAFKA",
+      "name": "Event stream",
+      "role": "Messaging",
+      "implemented": "Topic publish/consume, record keys/partitions, SASL/TLS and client certificates, durable inbox before explicit offset commit.",
+      "verification": "Real stream broker NAS-to-broker-to-NAS demo and replay/failure tests",
+      "gaps": "Runtime-specific tuning, Java keystores, multi-topic publishing, automatic offset commit. Idempotent producer does not make the complete NAS pipeline exactly-once.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "LDAP",
+      "name": "LDAP",
+      "role": "Authentication",
+      "implemented": "Sync bind, filtered user search, escaped username filters, user bind authentication, LDAPS/StartTLS, DNS SRV and manual failover.",
+      "verification": "Adapter/API contract and filter-injection tests; live directory required",
+      "gaps": "Comma-separated filter shorthand and URI overrides, SAML provisioning, automatic workspace login and full Users-host policy model.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "SFTP",
+      "name": "SFTP",
+      "role": "File transfer",
+      "implemented": "SSH browse/upload/download, password/private-key login, trusted host fingerprint, compression and optional parent directories.",
+      "verification": "Adapter tests; live partner SSH endpoint required",
+      "gaps": "OpenPGP packaging, per-algorithm negotiation UI, transfer resume, proxy rotation, virtual Users-host folders and custom URI schemes.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "SHAREPOINT",
+      "name": "Document library",
+      "role": "File transfer",
+      "implemented": "Application-client OAuth, library discovery, rooted listings, conflict-rejecting chunked uploads and ETag-conditioned downloads.",
+      "verification": "Document-library adapter contract and URL/auth/conflict tests; live tenant required",
+      "gaps": "Cross-site/cross-drive URI browsing, rename/move/delete, folder creation and sovereign-cloud endpoints.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "SMB",
+      "name": "SMB",
+      "role": "File transfer",
+      "implemented": "Rooted network-share browse/read/write, domain credentials, SMB3 encryption, exclusive creation and optional parent folders.",
+      "verification": "Adapter tests; live NAS/share credentials required",
+      "gaps": "SMB1 legacy/FIPS mode, selectable dialect bounds, client-specific tuning and cache controls.",
+      "documentation": "connectors"
+    },
+    {
+      "id": "AS2",
+      "name": "AS2",
+      "role": "Partner exchange",
+      "implemented": "Signed, encrypted and compressed documents; verified synchronous/asynchronous receipts; durable inbound acceptance and replay protection.",
+      "verification": "Real local HTTP exchange in both directions with verified signed receipts",
+      "gaps": "Reachability checks require a document exchange for full partner verification; no automatic document resend after uncertain delivery.",
+      "documentation": "protocols"
+    },
+    {
+      "id": "GCS",
+      "name": "Object storage",
+      "role": "File transfer",
+      "implemented": "Rooted bucket listings, generation-checked downloads and exclusive new-object uploads with service account or default credentials.",
+      "verification": "Adapter contracts; live bucket access required",
+      "gaps": "No object deletion, rename or resumable uploads.",
+      "documentation": "protocols"
+    },
+    {
+      "id": "EMS",
+      "name": "JMS messaging",
+      "role": "Outbound messaging",
+      "implemented": "Persistent transacted bytes/text publication to a queue or topic through an installed broker client and Java 17 bridge.",
+      "verification": "Bridge contract and source compilation; installed broker client required",
+      "gaps": "Outbound only; no subscriptions, OAuth or broker failover URL lists.",
+      "documentation": "protocols"
+    }
+  ]
+}

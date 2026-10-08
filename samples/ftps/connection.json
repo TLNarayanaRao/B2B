@@ -1,0 +1,12 @@
+{
+  "name": "Sample FTPS orders",
+  "protocol": "FTPS",
+  "endpoint": "ftps://ftp.partner.example:21/orders",
+  "config": {
+    "username": "relay",
+    "password_env": "FTP_PASSWORD",
+    "passive": true,
+    "tls_mode": "explicit",
+    "ca_certificate_env": "FTP_CA_CERT"
+  }
+}

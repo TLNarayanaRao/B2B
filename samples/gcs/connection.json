@@ -1,0 +1,9 @@
+{
+  "name": "Sample object storage orders",
+  "protocol": "GCS",
+  "endpoint": "gs://your-bucket/b2b",
+  "config": {
+    "project_id": "your-project",
+    "service_account_env": "GCS_SERVICE_ACCOUNT_JSON"
+  }
+}

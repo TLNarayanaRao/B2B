@@ -1,0 +1,12 @@
+{
+  "name": "Sample document library orders",
+  "protocol": "SHAREPOINT",
+  "endpoint": "https://tenant.sharepoint.com/sites/B2B",
+  "config": {
+    "tenant_id": "REPLACE-TENANT-ID",
+    "application_id": "REPLACE-APPLICATION-ID",
+    "application_secret_env": "SHAREPOINT_APPLICATION_SECRET",
+    "drive_name": "Documents",
+    "root_path": "orders"
+  }
+}

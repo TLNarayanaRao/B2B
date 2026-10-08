@@ -1,0 +1,12 @@
+{
+  "name": "Sample HTTP files",
+  "protocol": "HTTP",
+  "endpoint": "http://127.0.0.1:8000/http/REPLACE_WITH_REMOTE_CONNECTION_ID",
+  "config": {
+    "token_env": "HTTP_PARTNER_TOKEN",
+    "send_method": "PUT",
+    "enable_inbound": true,
+    "inbound_token_env": "HTTP_INBOUND_TOKEN",
+    "inbound_only": false
+  }
+}

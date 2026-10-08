@@ -1,0 +1,10 @@
+{
+  "name": "Sample FTP orders",
+  "protocol": "FTP",
+  "endpoint": "ftp://127.0.0.1:2121",
+  "config": {
+    "username": "relay",
+    "password_env": "FTP_PASSWORD",
+    "passive": true
+  }
+}

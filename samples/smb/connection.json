@@ -1,0 +1,10 @@
+{
+  "name": "Sample NAS share",
+  "protocol": "SMB",
+  "endpoint": "\\\\nas-server\\b2b",
+  "config": {
+    "username": "DOMAIN\\relay",
+    "password_env": "NAS_PASSWORD",
+    "encrypt": true
+  }
+}

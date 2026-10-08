@@ -1,0 +1,13 @@
+{
+  "name": "Sample event stream orders",
+  "protocol": "KAFKA",
+  "endpoint": "kafka://127.0.0.1:9092",
+  "config": {
+    "topic": "b2b-orders",
+    "security_protocol": "PLAINTEXT",
+    "enable_receiver": true,
+    "consumer_group_id": "relay-orders",
+    "auto_offset_reset": "earliest",
+    "message_max_bytes": 1000000
+  }
+}

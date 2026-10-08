@@ -1,0 +1,12 @@
+{
+  "name": "Sample HTTPS files",
+  "protocol": "HTTPS",
+  "endpoint": "https://files.partner.example/inbox",
+  "config": {
+    "token_env": "HTTP_PARTNER_TOKEN",
+    "send_method": "PUT",
+    "enable_inbound": true,
+    "inbound_token_env": "HTTP_INBOUND_TOKEN",
+    "require_https": true
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Sample AS2 partner",
+  "protocol": "AS2",
+  "endpoint": "https://as2.partner.example/as2",
+  "config": {
+    "local_as2_id": "MY-COMPANY",
+    "partner_as2_id": "ACME-AS2",
+    "sign": true,
+    "encrypt": true,
+    "compress": true,
+    "signing_key_env": "AS2_LOCAL_KEY",
+    "decryption_key_env": "AS2_LOCAL_KEY",
+    "partner_certificate_env": "AS2_PARTNER_CERT",
+    "mdn_mode": "SYNC",
+    "require_signed_mdn": true
+  }
+}

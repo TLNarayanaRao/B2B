@@ -1,0 +1,7 @@
+import React,{useEffect,useState} from 'react';
+export default function ConnectorInbox(){
+ const [data,setData]=useState({documents:[],receivers:[]}),[error,setError]=useState('');
+ async function refresh(){try{const response=await fetch('/api/connectors/inbox');if(!response.ok)throw new Error('Could not load connector inbox');setData(await response.json());setError('');}catch(e){setError(e.message);}}
+ useEffect(()=>{refresh();const timer=setInterval(refresh,5000);return()=>clearInterval(timer);},[]);
+ return <section className="table-panel"><div className="table-heading"><div><h2>Connector inbox</h2><p>HTTP uploads and stream messages saved before acknowledgement and routing.</p></div><button className="secondary" onClick={refresh}>Refresh</button></div>{error&&<div className="error">{error}</div>}{data.receivers.map(r=><div className="run" key={r.connection_id}><strong>Stream receiver Â· {r.error?'Needs attention':'Running'}</strong><p>{r.received} received Â· {r.connection_id}</p>{r.error&&<p className="error">{r.error}</p>}</div>)}<div className="table-scroll"><table><thead><tr><th>DOCUMENT</th><th>BYTES</th><th>RECEIVED</th><th></th></tr></thead><tbody>{data.documents.map(d=><tr key={d.id}><td><strong>{d.path}</strong></td><td>{d.bytes}</td><td>{new Date(d.created*1000).toLocaleString()}</td><td><a className="secondary" href={'/api/connectors/inbox/'+d.id} download>Download</a></td></tr>)}</tbody></table></div>{!data.documents.length&&<div className="empty"><strong>No connector documents received yet</strong></div>}</section>;
+}

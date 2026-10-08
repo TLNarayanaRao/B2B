@@ -1,0 +1,10 @@
+{
+  "name": "Sample SFTP orders",
+  "protocol": "SFTP",
+  "endpoint": "sftp://sftp.partner.example:22/orders",
+  "config": {
+    "username": "relay",
+    "password_env": "SFTP_PASSWORD",
+    "host_key_sha256": "SHA256:REPLACE_WITH_TRUSTED_PARTNER_FINGERPRINT"
+  }
+}

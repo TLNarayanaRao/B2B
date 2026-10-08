@@ -1,0 +1,15 @@
+node_modules/
+.npm-cache/
+dist/
+.venv/
+__pycache__/
+*.db
+.env
+.env.*
+.pytest_cache/
+*.class
+
+.test-runtime/
+.samples-runtime/
+
+tmp/pdfs/
